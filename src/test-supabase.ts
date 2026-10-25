@@ -1,20 +1,18 @@
 
-import { supabase } from './lib/supabase.ts'
+import { supabase } from './lib/supabase'
 
 async function testConnection() {
   console.log('Testing Supabase connection...')
 
-  const { data, error } = await supabase
-    .from('profiles')
-    .select('id')
-    .limit(1)
+  const { data, error } = await supabase.auth.getSession()
 
   if (error) {
-    console.error('Supabase connection error:', error.message)
+    console.error('Supabase error:', error.message)
     return
   }
 
-  console.log('Supabase connection successful!', data)
+  console.log('Supabase client initialized successfully.')
+  console.log('Current session:', data.session)
 }
 
 testConnection()

@@ -1,8 +1,9 @@
-import type { Session } from '@supabase/supabase-js'
-import { useEffect, useMemo, useRef, useState } from 'react'
 import './App.css'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import type { Session } from '@supabase/supabase-js'
 import { supabase } from './lib/supabase'
 import Auth from './Auth'
+
 
 type Page =
   | 'Overview'
@@ -113,36 +114,7 @@ function getDemoAnswer(question: string) {
   return 'Thank you for sharing your question. I can provide general educational information, but I cannot diagnose a condition or prescribe treatment. Could you share a little more about your symptoms, how long they have been happening, and whether anything makes them better or worse? If symptoms are severe or rapidly worsening, seek medical care.'
 }
 
-export default function App() {
-  const [session, setSession] = useState<Session | null>(null)
-  const [authLoading, setAuthLoading] = useState(true)
-
-  useEffect(() => {
-    let mounted = true
-
-    supabase.auth.getSession().then(({ data, error }) => {
-      if (error) {
-        console.error('Could not check login session:', error.message)
-      }
-      if (mounted) {
-        setSession(data.session)
-        setAuthLoading(false)
-      }
-    })
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, nextSession) => {
-      setSession(nextSession)
-      setAuthLoading(false)
-    })
-
-    return () => {
-      mounted = false
-      subscription.unsubscribe()
-    }
-  }, [])
-
+function Dashboard() {
   const [page, setPage] = useState<Page>('Overview')
 
   const [entries, setEntries] = useState<Symptom[]>(() => {
@@ -273,14 +245,6 @@ export default function App() {
     { name: 'Learn', icon: '◉' },
   ]
 
-  if (authLoading) {
-    return <div className="auth-page">Loading HERHealth...</div>
-  }
-
-  if (!session) {
-    return <Auth />
-  }
-
   return (
     <div className="app-shell">
       <aside className="sidebar">
@@ -329,29 +293,13 @@ export default function App() {
             <p>Keep track of your wellbeing at your own pace.</p>
           </div>
 
-         
-<div className="profile">
-  <div className="avatar">H</div>
-  <div className="profile-info">
-    <strong>
-      {String(session.user.user_metadata?.display_name || 'HERHealth User')}
-    </strong>
-    <small>{session.user.email}</small>
-    <button
-      type="button"
-      className="logout-button"
-      onClick={async () => {
-        const { error } = await supabase.auth.signOut()
-        if (error) {
-          setNotice('Could not sign out. Please try again.')
-        }
-      }}
-    >
-      Log out
-    </button>
-  </div>
-</div>
-
+          <div className="profile">
+            <div className="avatar">H</div>
+            <div>
+              <strong>HERHealth User</strong>
+              <small>Personal wellness</small>
+            </div>
+          </div>
         </div>
       </aside>
 
@@ -1219,5 +1167,95 @@ export default function App() {
         </div>
       </main>
     </div>
+  )
+}
+
+export default function App() {
+  const [session, setSession] = useState<Session | null | undefined>(
+    undefined,
+  )
+
+  const [authError, setAuthError] = useState('')
+
+  useEffect(() => {
+    let mounted = true
+
+    async function loadSession() {
+      const { data, error } = await supabase.auth.getSession()
+
+      if (!mounted) return
+
+      if (error) {
+        console.error('Unable to load Supabase session:', error.message)
+        setAuthError('Unable to check your login. Please refresh the page.')
+        setSession(null)
+        return
+      }
+
+      setSession(data.session)
+    }
+
+    void loadSession()
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, newSession) => {
+      setSession(newSession)
+      setAuthError('')
+    })
+
+    return () => {
+      mounted = false
+      subscription.unsubscribe()
+    }
+  }, [])
+
+  async function handleLogout() {
+    const { error } = await supabase.auth.signOut()
+
+    if (error) {
+      setAuthError(error.message)
+    }
+  }
+
+  if (session === undefined) {
+    return (
+      <main style={{ padding: '40px', textAlign: 'center' }}>
+        Loading HERHealth...
+      </main>
+    )
+  }
+
+  if (authError && !session) {
+    return (
+      <main style={{ padding: '40px', textAlign: 'center' }}>
+        <p>{authError}</p>
+        <button type="button" onClick={() => window.location.reload()}>
+          Try again
+        </button>
+      </main>
+    )
+  }
+
+  if (!session) {
+    return <Auth />
+  }
+
+  return (
+    <>
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'flex-end',
+          padding: '8px 20px',
+          background: '#fff7fa',
+        }}
+      >
+        <button type="button" onClick={handleLogout}>
+          Log out
+        </button>
+      </div>
+      <Dashboard />
+    </>
   )
 }

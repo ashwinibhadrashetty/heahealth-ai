@@ -1,121 +1,187 @@
 
-import { useState } from 'react'
+import { useState, type FormEvent } from 'react'
 import { supabase } from './lib/supabase'
 import './Auth.css'
-
 export default function Auth() {
   const [isLogin, setIsLogin] = useState(true)
-  const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [message, setMessage] = useState('')
+  const [errorMessage, setErrorMessage] = useState('')
   const [loading, setLoading] = useState(false)
 
-  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault()
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+
     setMessage('')
+    setErrorMessage('')
     setLoading(true)
 
     try {
+      const cleanEmail = email.trim()
+
       if (isLogin) {
+        // Log in an existing user
         const { error } = await supabase.auth.signInWithPassword({
-          email,
+          email: cleanEmail,
           password,
         })
-        if (error) throw error
-      } else {
-        const { data, error } = await supabase.auth.signUp({
-          email,
-          password,
-          options: { data: { display_name: name } },
-        })
+
         if (error) throw error
 
-        if (!data.session) {
-          setMessage('Account created! Check your email to confirm your account, then log in.')
+        setMessage('Login successful! Welcome to HERHealth.')
+        // App.tsx will display the dashboard when the session updates.
+      } else {
+        // Register a new user
+        const { data, error } = await supabase.auth.signUp({
+          email: cleanEmail,
+          password,
+        })
+
+        if (error) throw error
+
+        if (data.session) {
+          setMessage('Account created successfully! Welcome to HERHealth.')
         } else {
-          setMessage('Account created successfully!')
+          setMessage(
+            'Account created! Please check your email to confirm your account before logging in.'
+          )
         }
       }
-    } catch (error) {
-      setMessage(error instanceof Error ? error.message : 'Something went wrong.')
+    } catch (error: unknown) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : 'Something went wrong. Please try again.'
+
+      setErrorMessage(message)
     } finally {
       setLoading(false)
     }
   }
 
+  function switchMode() {
+    setIsLogin((current) => !current)
+    setMessage('')
+    setErrorMessage('')
+  }
+
   return (
     <main className="auth-page">
-      <form className="auth-card" onSubmit={handleSubmit}>
-        <div className="auth-logo">HER<span>Health</span></div>
-        <p className="auth-subtitle">Your personal women's health companion</p>
+      <section className="auth-card">
+        <div className="auth-logo">
+          <span className="auth-logo-mark">
+            H<span>+</span>
+          </span>
+          <div>
+            <strong>HERHealth</strong>
+            <small>WOMEN'S WELLNESS</small>
+          </div>
+        </div>
 
-        <h1>{isLogin ? 'Welcome back' : 'Create your account'}</h1>
-        <p className="auth-description">
-          {isLogin ? 'Sign in to continue to your health dashboard.' : 'Create an account to get started.'}
-        </p>
+        <div className="auth-heading">
+          <span className="auth-eyebrow">YOUR PERSONAL WELLNESS SPACE</span>
 
-        {!isLogin && (
-          <label>
-            Your name
-            <input
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Enter your name"
-              autoComplete="name"
-              required
-            />
-          </label>
-        )}
+          <h1>
+            {isLogin ? (
+              <>
+                Welcome <span>back.</span>
+              </>
+            ) : (
+              <>
+                Your journey <span>starts here.</span>
+              </>
+            )}
+          </h1>
 
-        <label>
-          Email address
+          <p>
+            {isLogin
+              ? 'Sign in to continue your wellness journey.'
+              : 'Create your account and take a step toward understanding your health.'}
+          </p>
+        </div>
+
+        <form className="auth-form" onSubmit={handleSubmit}>
+          <label htmlFor="auth-email">Email address</label>
+
           <input
+            id="auth-email"
             type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="you@example.com"
             autoComplete="email"
+            placeholder="you@example.com"
+            value={email}
+            onChange={(event) => setEmail(event.target.value)}
             required
           />
-        </label>
 
-        <label>
-          Password
+          <label htmlFor="auth-password">Password</label>
+
           <input
+            id="auth-password"
             type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder="At least 6 characters"
             autoComplete={isLogin ? 'current-password' : 'new-password'}
+            placeholder={
+              isLogin ? 'Enter your password' : 'Create a password'
+            }
+            value={password}
+            onChange={(event) => setPassword(event.target.value)}
             minLength={6}
             required
           />
-        </label>
 
-        {message && <p className="auth-message" role="status">{message}</p>}
+          {!isLogin && (
+            <p className="auth-hint">
+              Use at least 6 characters, or follow any stronger password
+              requirements configured for your Supabase project.
+            </p>
+          )}
 
-        <button className="auth-submit" type="submit" disabled={loading}>
-          {loading ? 'Please wait...' : isLogin ? 'Sign in' : 'Create account'}
-        </button>
+          {errorMessage && (
+            <div className="auth-message auth-error" role="alert">
+              {errorMessage}
+            </div>
+          )}
+
+          {message && (
+            <div className="auth-message auth-success" role="status">
+              {message}
+            </div>
+          )}
+
+          <button
+            className="auth-submit"
+            type="submit"
+            disabled={loading}
+          >
+            {loading
+              ? 'Please wait...'
+              : isLogin
+                ? 'Login to HERHealth'
+                : 'Create my account'}
+            {!loading && <span>→</span>}
+          </button>
+        </form>
+
+        <div className="auth-divider">
+          <span>YOUR WELLNESS, YOUR WAY</span>
+        </div>
 
         <p className="auth-switch">
-          {isLogin ? "Don't have an account?" : 'Already have an account?'}{' '}
-          <button
-            type="button"
-            onClick={() => {
-              setIsLogin(!isLogin)
-              setMessage('')
-            }}
-          >
-            {isLogin ? 'Sign up' : 'Sign in'}
+          {isLogin ? "Don't have an account?" : 'Already have an account?'}
+          <button type="button" onClick={switchMode}>
+            {isLogin ? 'Sign up' : 'Login'}
           </button>
         </p>
 
         <p className="auth-privacy">
-          Your health information should remain private. Never share your password.
+          ♡ Your health journey deserves care and respect.
         </p>
-      </form>
+
+        <p className="auth-disclaimer">
+          HERHealth provides general educational information, not a medical
+          diagnosis or a substitute for professional care.
+        </p>
+      </section>
     </main>
   )
 }
