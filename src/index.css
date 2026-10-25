@@ -1,0 +1,27 @@
+
+html {
+  min-width: 320px;
+  min-height: 100%;
+  background: #faf9fc;
+  scroll-behavior: smooth;
+}
+
+body {
+  min-width: 320px;
+  min-height: 100vh;
+  margin: 0;
+}
+
+#root {
+  min-height: 100vh;
+  width: 100%;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+::selection {
+  background: #e5d7f8;
+  color: #38274f;
+}
