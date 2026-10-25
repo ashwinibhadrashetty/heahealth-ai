@@ -1,5 +1,8 @@
+import type { Session } from '@supabase/supabase-js'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import './App.css'
+import { supabase } from './lib/supabase'
+import Auth from './Auth'
 
 type Page =
   | 'Overview'
@@ -111,6 +114,35 @@ function getDemoAnswer(question: string) {
 }
 
 export default function App() {
+  const [session, setSession] = useState<Session | null>(null)
+  const [authLoading, setAuthLoading] = useState(true)
+
+  useEffect(() => {
+    let mounted = true
+
+    supabase.auth.getSession().then(({ data, error }) => {
+      if (error) {
+        console.error('Could not check login session:', error.message)
+      }
+      if (mounted) {
+        setSession(data.session)
+        setAuthLoading(false)
+      }
+    })
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, nextSession) => {
+      setSession(nextSession)
+      setAuthLoading(false)
+    })
+
+    return () => {
+      mounted = false
+      subscription.unsubscribe()
+    }
+  }, [])
+
   const [page, setPage] = useState<Page>('Overview')
 
   const [entries, setEntries] = useState<Symptom[]>(() => {
@@ -241,6 +273,14 @@ export default function App() {
     { name: 'Learn', icon: '◉' },
   ]
 
+  if (authLoading) {
+    return <div className="auth-page">Loading HERHealth...</div>
+  }
+
+  if (!session) {
+    return <Auth />
+  }
+
   return (
     <div className="app-shell">
       <aside className="sidebar">
@@ -289,13 +329,29 @@ export default function App() {
             <p>Keep track of your wellbeing at your own pace.</p>
           </div>
 
-          <div className="profile">
-            <div className="avatar">H</div>
-            <div>
-              <strong>HERHealth User</strong>
-              <small>Personal wellness</small>
-            </div>
-          </div>
+         
+<div className="profile">
+  <div className="avatar">H</div>
+  <div className="profile-info">
+    <strong>
+      {String(session.user.user_metadata?.display_name || 'HERHealth User')}
+    </strong>
+    <small>{session.user.email}</small>
+    <button
+      type="button"
+      className="logout-button"
+      onClick={async () => {
+        const { error } = await supabase.auth.signOut()
+        if (error) {
+          setNotice('Could not sign out. Please try again.')
+        }
+      }}
+    >
+      Log out
+    </button>
+  </div>
+</div>
+
         </div>
       </aside>
 

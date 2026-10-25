@@ -1,0 +1,135 @@
+
+.auth-page {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: linear-gradient(135deg, #fff7fb, #f4f0ff);
+  font-family: inherit;
+}
+
+.auth-card {
+  width: 100%;
+  max-width: 420px;
+  box-sizing: border-box;
+  padding: 36px;
+  border: 1px solid #f0e3ee;
+  border-radius: 24px;
+  background: white;
+  box-shadow: 0 16px 50px rgba(83, 43, 76, 0.09);
+}
+
+.auth-logo {
+  color: #bd568f;
+  font-size: 28px;
+  font-weight: 800;
+  text-align: center;
+}
+
+.auth-logo span {
+  color: #654b88;
+}
+
+.auth-subtitle,
+.auth-description,
+.auth-privacy {
+  color: #777080;
+  text-align: center;
+  line-height: 1.5;
+}
+
+.auth-subtitle {
+  margin: 8px 0 28px;
+  font-size: 13px;
+}
+
+.auth-card h1 {
+  margin-bottom: 8px;
+  color: #30243a;
+  text-align: center;
+  font-size: 25px;
+}
+
+.auth-description {
+  margin-bottom: 24px;
+  font-size: 14px;
+}
+
+.auth-card label {
+  display: block;
+  margin-top: 16px;
+  color: #403448;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.auth-card input {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  margin-top: 8px;
+  padding: 12px 14px;
+  border: 1px solid #ded5e3;
+  border-radius: 10px;
+  background: white;
+  color: #30243a;
+  font: inherit;
+}
+
+.auth-card input:focus {
+  outline: 2px solid #dba2c7;
+  outline-offset: 1px;
+}
+
+.auth-submit {
+  width: 100%;
+  margin-top: 24px;
+  padding: 13px;
+  border: none;
+  border-radius: 10px;
+  background: #bd568f;
+  color: white;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.auth-submit:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+.auth-switch {
+  margin-top: 22px;
+  color: #6c6173;
+  text-align: center;
+  font-size: 14px;
+}
+
+.auth-switch button {
+  border: none;
+  background: none;
+  color: #a83d7b;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.auth-message {
+  margin-top: 16px;
+  color: #75436a;
+  font-size: 13px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.auth-privacy {
+  margin-top: 24px;
+  font-size: 11px;
+}
+
+@media (max-width: 480px) {
+  .auth-card {
+    padding: 26px 20px;
+  }
+}
